@@ -3,10 +3,13 @@ package main
 import (
 	"fmt"
 	"log"
+	"math"
 	"os"
 	"path/filepath"
 	"syscall"
 	"time"
+
+	"github.com/fatih/color"
 )
 
 type arguments struct {
@@ -15,25 +18,26 @@ type arguments struct {
 }
 
 var (
-	Green   = color("\033[38;5;10m%s\033[0m")
-	Teal    = color("\033[38;5;14m%s\033[0m")
-	Orange  = color("\033[38;5;215m%s\033[0m")
-	Yellow  = color("\033[38;5;221m%s\033[0m")
-	Magenta = color("\033[38;5;5m%s\033[0m")
+	Green   = color.New(color.FgHiGreen).PrintfFunc()
+	Cyan    = color.New(color.FgCyan).PrintfFunc()
+	Red     = color.New(color.FgRed).PrintfFunc()
+	Yellow  = color.New(color.FgYellow).PrintfFunc()
+	Magenta = color.New(color.FgHiMagenta).PrintfFunc()
 )
 
-func color(c string) func(...interface{}) string {
-	return func(args ...interface{}) string {
-		return fmt.Sprintf(c, fmt.Sprint(args...))
-	}
-}
+// func color(c string) func(...interface{}) string {
+// 	return func(args ...interface{}) string {
+// 		return fmt.Sprintf(c, fmt.Sprint(args...))
+// 	}
+// }
 
 type parsedFile struct {
-	Path         string
+	path         string
 	isDir        bool
 	timeCreated  string
 	timeModified string
-	size         string
+	size         int64
+	sizeString   string
 }
 
 func main() {
@@ -68,33 +72,65 @@ func main() {
 	list, _ := dir.ReadDir(0)
 	for _, f := range list {
 
-		// Set up our parsed file
+		// set up our parsed file
 		file := parsedFile{}
 
-		// Determine the absolute path
+		// determine the absolute path
 		path, _ := filepath.Abs(args.Path + sep + f.Name())
-		file.Path = path
+		file.path = path
 
-		// Find out whether the file is actually a directory
+		// find out whether the file is actually a directory
 		file.isDir = determineType(path)
 
-		stats, _ := os.Stat(file.Path)
+		// get the FileInfo for our current path
+		stats, _ := os.Stat(file.path)
 
+		// determine the time modified, and format it
 		file.timeModified = stats.ModTime().Format(time.RFC822)
-		fmt.Printf("%s ", Magenta(file.timeModified))
+		Magenta("%s ", file.timeModified)
 
-		// file.timeCreated = stats.Sys().(*syscall.Stat_t)
+		// determine the time created (currently windows only)
+		nano := stats.Sys().(*syscall.Win32FileAttributeData).CreationTime.Nanoseconds()
+		file.timeCreated = time.Unix(0, nano).Format(time.RFC822)
+		// fmt.Printf("%s ", Magenta(file.timeCreated))
+
+		// determine the file size
+		file.size = stats.Size()
+
+		// Print
+		if file.isDir {
+			Green("%s ", "FOLD")
+		} else {
+			Green("%s ", formatBytes(file.size))
+		}
 
 		// Print respective stuff
 		if file.isDir {
-			fmt.Printf("%s ", Teal(f.Name()+"/"))
+			Cyan("%s ", f.Name()+"/")
 		} else {
-			fmt.Printf("%s ", Green(f.Name()))
+			Cyan("%s ", f.Name())
 		}
 
 		fmt.Printf("\n")
 	}
 
+}
+
+func formatBytes(bytes int64) string {
+	if bytes == 0 {
+		return "0 B"
+	}
+
+	k := 1024
+	sizes := []string{"B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"}
+
+	i := math.Floor(math.Log(float64(bytes)) / math.Log(float64(k)))
+	num := float64(bytes) / math.Pow(float64(k), i)
+	if num == math.Round(num) {
+		return fmt.Sprintf("%d %s", int(num), sizes[int(i)])
+	} else {
+		return fmt.Sprintf("%.1f %s", num, sizes[int(i)])
+	}
 }
 
 func determineType(path string) bool {
@@ -111,8 +147,4 @@ func determineType(path string) bool {
 	default:
 		return false
 	}
-}
-
-func timespecToTime(ts syscall.Timespec) time.Time {
-	return time.Unix(int64(ts.Sec), int64(ts.Nsec))
 }
