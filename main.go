@@ -20,11 +20,12 @@ type arguments struct {
 }
 
 var (
-	Green   = color.New(color.FgHiGreen).PrintfFunc()
-	Cyan    = color.New(color.FgCyan).PrintfFunc()
-	Red     = color.New(color.FgRed).PrintfFunc()
-	Yellow  = color.New(color.FgYellow).PrintfFunc()
-	Magenta = color.New(color.FgHiMagenta).PrintfFunc()
+	Green     = color.New(color.FgHiGreen).PrintfFunc()
+	Cyan      = color.New(color.FgCyan).PrintfFunc()
+	LightCyan = color.New(color.FgHiCyan).PrintfFunc()
+	Red       = color.New(color.FgRed).PrintfFunc()
+	Yellow    = color.New(color.FgYellow).PrintfFunc()
+	Magenta   = color.New(color.FgHiMagenta).PrintfFunc()
 )
 
 // func color(c string) func(...interface{}) string {
@@ -139,7 +140,7 @@ func main() {
 
 		// print the name
 		if file.isDir {
-			Cyan("%s ", file.name+"/")
+			LightCyan("%s ", file.name+"/")
 		} else {
 			Cyan("%s ", file.name)
 		}
