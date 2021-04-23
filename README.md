@@ -1,7 +1,7 @@
 <div align="center">
 <h1>zls</h1>
 
-Super basic and super small windows file system list.
+Super basic and super small windows file system list. Just `dir` but nicer looking.
 
 ![zls terminal](example.png)
 </div>
