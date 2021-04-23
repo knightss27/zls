@@ -33,6 +33,7 @@ var (
 
 type parsedFile struct {
 	path         string
+	name         string
 	isDir        bool
 	timeCreated  string
 	timeModified string
@@ -70,10 +71,16 @@ func main() {
 	sep := string(os.PathSeparator)
 
 	list, _ := dir.ReadDir(0)
-	for _, f := range list {
+	files := make([]parsedFile, len(list))
+	lsize := 0
+
+	for i, f := range list {
 
 		// set up our parsed file
 		file := parsedFile{}
+
+		// add name
+		file.name = f.Name()
 
 		// determine the absolute path
 		path, _ := filepath.Abs(args.Path + sep + f.Name())
@@ -87,7 +94,6 @@ func main() {
 
 		// determine the time modified, and format it
 		file.timeModified = stats.ModTime().Format(time.RFC822)
-		Magenta("%s ", file.timeModified)
 
 		// determine the time created (currently windows only)
 		nano := stats.Sys().(*syscall.Win32FileAttributeData).CreationTime.Nanoseconds()
@@ -96,19 +102,35 @@ func main() {
 
 		// determine the file size
 		file.size = stats.Size()
-
-		// Print
-		if file.isDir {
-			Green("%s ", "FOLD")
-		} else {
-			Green("%s ", formatBytes(file.size))
+		file.sizeString = formatBytes(file.size)
+		if len(file.sizeString) > lsize {
+			lsize = len(file.sizeString)
 		}
 
-		// Print respective stuff
+		// add to array
+		files[i] = file
+	}
+
+	for _, file := range files {
+
+		// start the line
+		Yellow("> ")
+
+		// print the date
+		Magenta("%s ", file.timeModified)
+
+		// print the size
 		if file.isDir {
-			Cyan("%s ", f.Name()+"/")
+			Green("%"+fmt.Sprint(lsize)+"s ", "FOLD")
 		} else {
-			Cyan("%s ", f.Name())
+			Green("%"+fmt.Sprint(lsize)+"s ", file.sizeString)
+		}
+
+		// print the name
+		if file.isDir {
+			Cyan("%s ", file.name+"/")
+		} else {
+			Cyan("%s ", file.name)
 		}
 
 		fmt.Printf("\n")
