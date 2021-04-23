@@ -13,6 +13,21 @@ import (
 	"github.com/fatih/color"
 )
 
+var version = "1.0.0"
+var help = `
+ USAGE:
+  zls [dir] [OPTIONS]
+
+ FLAGS:
+  -c, --created		Show file/folder creation times (Windows only)
+  -v, --verbose		Shows off more info
+  -h, --help		Show this help message
+
+ ARGS:
+  <dir>		Give zls a directory to list [default: .]
+
+`
+
 type arguments struct {
 	Path    string
 	Verbose bool
@@ -27,12 +42,6 @@ var (
 	Yellow    = color.New(color.FgYellow).PrintfFunc()
 	Magenta   = color.New(color.FgHiMagenta).PrintfFunc()
 )
-
-// func color(c string) func(...interface{}) string {
-// 	return func(args ...interface{}) string {
-// 		return fmt.Sprintf(c, fmt.Sprint(args...))
-// 	}
-// }
 
 type parsedFile struct {
 	path         string
@@ -56,6 +65,10 @@ func main() {
 				args.Verbose = true
 			case "-c", "--created":
 				args.Created = true
+			case "-h", "--help":
+				Green("\n zls %s\n", version)
+				Cyan(help)
+				os.Exit(1)
 			default:
 				fmt.Printf("unknown flag %s\n", arg)
 				os.Exit(1)
