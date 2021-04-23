@@ -6,6 +6,7 @@ import (
 	"math"
 	"os"
 	"path/filepath"
+	"runtime"
 	"syscall"
 	"time"
 
@@ -15,6 +16,7 @@ import (
 type arguments struct {
 	Path    string
 	Verbose bool
+	Created bool
 }
 
 var (
@@ -51,6 +53,8 @@ func main() {
 			switch arg {
 			case "-v", "--verbose":
 				args.Verbose = true
+			case "-c", "--created":
+				args.Created = true
 			default:
 				fmt.Printf("unknown flag %s\n", arg)
 				os.Exit(1)
@@ -96,9 +100,12 @@ func main() {
 		file.timeModified = stats.ModTime().Format(time.RFC822)
 
 		// determine the time created (currently windows only)
-		nano := stats.Sys().(*syscall.Win32FileAttributeData).CreationTime.Nanoseconds()
-		file.timeCreated = time.Unix(0, nano).Format(time.RFC822)
-		// fmt.Printf("%s ", Magenta(file.timeCreated))
+		if runtime.GOOS == "windows" {
+			nano := stats.Sys().(*syscall.Win32FileAttributeData).CreationTime.Nanoseconds()
+			file.timeCreated = time.Unix(0, nano).Format(time.RFC822)
+		} else {
+			file.timeCreated = "-"
+		}
 
 		// determine the file size
 		file.size = stats.Size()
@@ -117,7 +124,11 @@ func main() {
 		Yellow("> ")
 
 		// print the date
-		Magenta("%s ", file.timeModified)
+		if args.Created {
+			Magenta("%s ", file.timeCreated)
+		} else {
+			Magenta("%s ", file.timeModified)
+		}
 
 		// print the size
 		if file.isDir {
