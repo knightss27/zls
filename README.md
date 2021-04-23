@@ -16,7 +16,7 @@ Super basic and super small windows file system list.
  FLAGS:
   -c, --created		Show file/folder creation times (Windows only)
   -v, --verbose		Shows off more info
-  -h, --help		  Show this help message
+  -h, --help		Show this help message
 
  ARGS:
   <dir>		Give zls a directory to list [default: .]
