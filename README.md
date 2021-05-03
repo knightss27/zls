@@ -2,6 +2,7 @@
 <h1>zls</h1>
 
 Super basic and super small windows file system list. Just `dir` but nicer looking.
+This is really a short practice for myself in Go, but I think it works pretty well :).
 
 ![zls terminal](example.png)
 </div>
